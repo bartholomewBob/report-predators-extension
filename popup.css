@@ -1,0 +1,27 @@
+.divider {
+	height: 1px;
+	width: 100%;
+	background-color: black;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+body {
+	width: 512px;
+}
+
+#header {
+	width: 100%;
+	text-align: center;
+	font-size: 18px;
+}
+
+input {
+	font-size: 16px;
+	width: 100%;
+	margin-bottom: 10px;
+}
+
+span {
+	font-weight: bold;
+}

@@ -1,0 +1,44 @@
+{
+    "manifest_version": 3,
+    "name": "Roblox Reporter",
+    "description": "Fill out report forms automatically",
+    "version": "0.0.1",
+    "icons": {
+        "16": "./logo-16.png",
+        "48": "./logo-48.png",
+        "128": "./logo-128.png"
+    },
+    "action": {
+        "default_title": "Roblox Reporter",
+        "default_icon": {
+            "16": "./logo-16.png",
+            "24": "./logo-24.png",
+            "32": "./logo-32.png"
+        },
+        "default_popup": "./popup.html"
+    },
+    "permissions": [
+        "storage"
+      ],
+    "host_permissions": [
+        "*://*/*"
+    ],
+    "content_scripts": [{
+        "matches": ["https://www.roblox.com/users/*/profile*"],
+        "css": ["content.css"],
+        "js": ["content-profile.js"]
+    }, {
+        "matches": ["https://www.roblox.com/abusereport/userprofile?id=*"],
+        "css": ["content.css"],
+        "js": ["content-standard.js"]
+    }, 
+    {
+        "matches": ["https://www.roblox.com/illegal-content-reporting/*"],
+        "css": ["content.css"],
+        "js": ["content-dsa.js"]
+    }],
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    }
+}

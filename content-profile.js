@@ -46,10 +46,11 @@ const generateTemplate = (data, flags, sender) => {
 
 	details = details.join(', ');
 	details = details.charAt(0).toUpperCase() + details.slice(1);
+	details += '. ';
 
-	let template = `I am writing to report an account with an inappropriate ${info} on your platform. ${details}. The ${info} ${
-		flags.length == 1 ? 'violates' : 'violate'
-	} the community guidelines as ${flags.length == 1 ? 'it' : 'they'} ${flags.length == 1 ? 'contains' : 'contain'} offensive language/imagery not suitable for the platform.
+	let template = `I am writing to report an account with an inappropriate ${info} on your platform. ${details}The ${info} ${flags.length == 1 ? 'violates' : 'violate'} the community guidelines as ${
+		flags.length == 1 ? 'it' : 'they'
+	} ${flags.length == 1 ? 'contains' : 'contain'} offensive language/imagery not suitable for the platform.
 
 I kindly request that the necessary actions be taken to address this issue promptly. This may include reaching out to the accountholder to change the inappropriate content to something more appropriate, or suspending the account entirely if deemed necessary.
 
@@ -159,47 +160,48 @@ let dsaButton = document.querySelector('#pred-main > .reports > #dsa');
 let standardButton = document.querySelector('#pred-main > .reports > #standard');
 dsaButton.addEventListener('click', () => {
 	dsaButton.classList.remove('error');
-	dsaButton.innerHTML = '...';
+	dsaButton.innerHTML = 'Loading...';
 
-	// Check if server is running
-	pingServer({ ping: true }).then((result) => {
-		if (!result) {
-			showError('Please turn on python flask server', dsaButton, 'DSA Report');
-			return;
-		}
+	chrome.storage.local.get(['email', 'sender', 'country'], (result) => {
+		if (
+			!Object.keys(result).includes('email') ||
+			!Object.keys(result).includes('sender') ||
+			!Object.keys(result).includes('country') ||
+			result.email.trim() == '' ||
+			result.sender.trim() == '' ||
+			result.country.trim() == ''
+		) {
+			showError('Please enter email/sender/country in popup', dsaButton, 'DSA Report');
+		} else {
+			let all_flags = JSON.parse(localStorage.getItem('user-flags'));
+			if (!Object.keys(all_flags).includes(user_id)) {
+				showError('Please choose one or more flag', dsaButton, 'DSA Report');
+				return;
+			}
 
-		chrome.storage.local.get(['email', 'sender', 'country'], (result) => {
 			if (
-				!Object.keys(result).includes('email') ||
-				!Object.keys(result).includes('sender') ||
-				!Object.keys(result).includes('country') ||
-				result.email.trim() == '' ||
-				result.sender.trim() == '' ||
-				result.country.trim() == ''
+				document.querySelector(
+					'#right-navigation-header > div.navbar-right.rbx-navbar-right > ul > div.age-bracket-label.text-header > a > span.text-overflow.age-bracket-label-username.font-caption-header'
+				) == null
 			) {
-				showError('Please enter email/sender/country in popup', dsaButton, 'DSA Report');
-			} else {
-				let all_flags = JSON.parse(localStorage.getItem('user-flags'));
-				if (!Object.keys(all_flags).includes(user_id)) {
-					showError('Please choose one or more flag', dsaButton, 'DSA Report');
+				showError('Please log in', dsaButton, 'DSA Report', 5);
+				return;
+			}
+
+			let flags = all_flags[user_id];
+			let template = generateTemplate(get_data(), flags, result.sender.trim());
+
+			// Check if server is running
+			pingServer({ ping: true }).then((ping_result) => {
+				if (!ping_result) {
+					showError('Please turn on python flask server', dsaButton, 'DSA Report');
 					return;
 				}
-
-				if (
-					document.querySelector(
-						'#right-navigation-header > div.navbar-right.rbx-navbar-right > ul > div.age-bracket-label.text-header > a > span.text-overflow.age-bracket-label-username.font-caption-header'
-					) == null
-				) {
-					showError('Please log in', dsaButton, 'DSA Report', 5);
-					return;
-				}
-
-				let flags = all_flags[user_id];
-				let template = generateTemplate(get_data(), flags, result.sender.trim());
 
 				pingServer({
 					ping: false,
 					send_report: true,
+					report_type: 'profile',
 					id: user_id,
 					template: template,
 					sender: result.sender.trim(),
@@ -223,14 +225,14 @@ dsaButton.addEventListener('click', () => {
 						dsaButton.innerHTML = 'DSA Report';
 					}
 				});
-			}
-		});
+			});
+		}
 	});
 });
 
 standardButton.addEventListener('click', () => {
 	standardButton.classList.remove('error');
-	standardButton.innerHTML = '...';
+	standardButton.innerHTML = 'Loading...';
 	chrome.storage.local.get(['email', 'sender', 'country'], (result) => {
 		if (result.email.trim() == '' || result.sender.trim() == '' || result.country.trim() == '') {
 			showError('Please enter email/sender/country in popup', standardButton, 'Standard Report');

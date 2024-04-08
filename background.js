@@ -18,6 +18,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	if (request.ping) {
 		getUrl().then((url) => {
 			console.log(url);
+
+			console.log(
+				fetch(url, {
+					method: 'GET',
+				})
+			);
+
 			fetch(url, {
 				method: 'GET',
 			})
@@ -41,6 +48,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				body: JSON.stringify(request),
 			})
 				.then(async (result) => {
+					console.log(result);
 					let text = await result.text();
 
 					sendResponse(text);

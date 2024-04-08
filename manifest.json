@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Roblox Reporter",
     "description": "Fill out report forms automatically",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "icons": {
         "16": "./logo-16.png",
         "48": "./logo-48.png",
@@ -23,20 +23,33 @@
     "host_permissions": [
         "*://*/*"
     ],
-    "content_scripts": [{
-        "matches": ["https://www.roblox.com/users/*/profile*"],
-        "css": ["content.css"],
-        "js": ["content-profile.js"]
-    }, {
-        "matches": ["https://www.roblox.com/abusereport/userprofile?id=*"],
-        "css": ["content.css"],
-        "js": ["content-standard.js"]
-    }, 
-    {
-        "matches": ["https://www.roblox.com/illegal-content-reporting/*"],
-        "css": ["content.css"],
-        "js": ["content-dsa.js"]
-    }],
+    "content_scripts": [
+        {
+            "matches": ["https://www.roblox.com/users/*/profile*"],
+            "css": ["content.css"],
+            "js": ["content-profile.js"]
+        },
+        {
+            "matches": ["https://www.roblox.com/abusereport/userprofile?id=*"],
+            "css": ["content.css"],
+            "js": ["content-standard.js"]
+        }, 
+        {
+            "matches": ["https://www.roblox.com/illegal-content-reporting/*"],
+            "css": ["content.css"],
+            "js": ["content-dsa.js"]
+        },
+        {
+            "matches": ["https://www.roblox.com/catalog/*"],
+            "css": ["content.css"],
+            "js": ["content-catalog.js"]
+        },
+        {
+            "matches": ["https://www.roblox.com/groups/*"],
+            "css": ["content.css"],
+            "js": ["content-group.js"]
+        }
+    ],
     "background": {
         "service_worker": "background.js",
         "type": "module"

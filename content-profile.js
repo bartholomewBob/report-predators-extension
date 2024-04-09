@@ -1,6 +1,3 @@
-// console.error('hi');
-const closeTime = 20; // in seconds
-
 const template = (data) => {
 	let template = document.createElement('template');
 	template.innerHTML = data;
@@ -61,37 +58,75 @@ ${sender ? 'Sincerely,\n' + sender : ''}`;
 	return template;
 };
 
-const user_id = window.location.href.match(/\d+/g)[0];
-let flags = getStoredFlags();
-if (Object.keys(flags).includes(user_id)) {
-	flags = flags[user_id];
-} else {
-	flags = [];
-}
+const formatUnix = (unix) => {
+	let date = new Date(unix);
+	let hours = date.getHours();
+	let period = hours >= 12 ? 'PM' : 'AM';
+	hours = hours > 12 ? hours - 12 : hours;
+	let minutes = date.getMinutes().toString().padStart(2, '0');
 
-let makeCookieTimeout = null;
-let makeCookieInterval = null;
+	let year = date.getFullYear();
+	let month = date.getMonth() + 1;
+	let day = date.getDate();
 
-let main = template(`
-<div id="pred-main">
-    <div class="flags">
-        <div class="flag button ${flags.includes('avatar') ? 'chosen' : ''}" data-name="avatar">Avatar</div>
-        <div class="flag button ${flags.includes('display') ? 'chosen' : ''}" data-name="display">Display name</div>
-        <div class="flag button ${flags.includes('user') ? 'chosen' : ''}" data-name="user">Username</div>
-        <div class="flag button ${flags.includes('bio') ? 'chosen' : ''}" data-name="bio">Bio</div>
-    </div>
-    <div class="reports">
-        <div class="button" id="dsa">
-            DSA Report
-        </div>
-        <div class="button" id="standard">
-            Standard Report
-        </div>
-    </div>
+	return `${hours}:${minutes} ${period} ${year}/${month}/${day}`;
+};
+
+const checkLastReport = () => {
+	let previous = document.querySelector('#pred-main > #timestamp');
+	if (previous) {
+		previous.remove();
+	}
+	let reports = JSON.parse(localStorage.getItem('reports') || '[]');
+
+	let user = reports.find((report) => report.user == user_id);
+	if (!user) return;
+
+	let timestamp = formatUnix(user.timestamp);
+
+	let parent = document.querySelector('#pred-main');
+
+	let main = template(`
+<div id="timestamp">
+	Last report: ${timestamp} - Total reports: ${user.reports}
 </div>
 `);
+	parent.insertBefore(main, parent.firstChild);
+};
 
-document.querySelector('#profile-header-container').appendChild(main);
+const user_id = window.location.href.match(/\d+/g)[0];
+
+const getMainTemplate = () => {
+	let flags = getStoredFlags();
+	if (Object.keys(flags).includes(user_id)) {
+		flags = flags[user_id];
+	} else {
+		flags = [];
+	}
+
+	return template(`
+	<div id="pred-main">
+		<div class="flags">
+			<div class="flag button ${flags.includes('avatar') ? 'chosen' : ''}" data-name="avatar">Avatar</div>
+			<div class="flag button ${flags.includes('display') ? 'chosen' : ''}" data-name="display">Display name</div>
+			<div class="flag button ${flags.includes('user') ? 'chosen' : ''}" data-name="user">Username</div>
+			<div class="flag button ${flags.includes('bio') ? 'chosen' : ''}" data-name="bio">Bio</div>
+		</div>
+		<div class="reports">
+			<div class="button" id="dsa">
+				DSA Report
+			</div>
+			<div class="button" id="standard">
+				Standard Report
+			</div>
+		</div>
+	</div>
+	`);
+};
+
+document.querySelector('#profile-header-container').appendChild(getMainTemplate());
+
+checkLastReport();
 
 let flag_elements = Array.from(document.querySelectorAll('#pred-main > .flags > .flag'));
 
@@ -120,12 +155,12 @@ flag_elements.map((flag) => {
 		} else {
 			flags[user_id] = flags[user_id].concat([name]);
 		}
-		console.log(flags);
+
 		localStorage.setItem('user-flags', JSON.stringify(flags));
 	});
 });
 
-const get_data = () => {
+const getData = () => {
 	return {
 		id: user_id,
 		display: document.querySelector('.profile-name:first-child').innerHTML,
@@ -135,7 +170,7 @@ const get_data = () => {
 };
 
 const report = (url) => {
-	localStorage.setItem('reporting', JSON.stringify(get_data()));
+	localStorage.setItem('reporting', JSON.stringify(getData()));
 	window.open(url, '_blank');
 };
 
@@ -189,7 +224,7 @@ dsaButton.addEventListener('click', () => {
 			}
 
 			let flags = all_flags[user_id];
-			let template = generateTemplate(get_data(), flags, result.sender.trim());
+			let template = generateTemplate(getData(), flags, result.sender.trim());
 
 			// Check if server is running
 			pingServer({ ping: true }).then((ping_result) => {
@@ -223,6 +258,28 @@ dsaButton.addEventListener('click', () => {
 
 						showError(errors[json.type], dsaButton, 'DSA Report', 3);
 					} else {
+						let reports = JSON.parse(localStorage.getItem('reports') || '[]');
+
+						let index = reports.findIndex((report) => report.user == user_id);
+
+						if (index != -1) {
+							reports[index] = {
+								user: user_id,
+								reports: reports[index].reports + 1,
+								timestamp: Date.now(),
+							};
+						} else {
+							reports.append({
+								user: user_id,
+								reports: 1,
+								timestamp: Date.now(),
+							});
+						}
+
+						localStorage.setItem('reports', JSON.stringify(reports));
+
+						checkLastReport();
+
 						dsaButton.innerHTML = 'DSA Report';
 					}
 				});

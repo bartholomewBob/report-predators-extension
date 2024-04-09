@@ -11,6 +11,12 @@ from selenium.webdriver.chrome.service import Service
 
 import json, time, re, subprocess, os, sys
 
+active_drivers = 0
+
+def get_driver_limit():
+    with open('./limit.txt', 'r') as file:
+        return int(file.read().strip())
+
 # Get all processes using a specific port by using netstat
 def get_port_pids(port):
     command = f'netstat -ano | findstr :{port} | findstr "LISTENING"'
@@ -48,15 +54,24 @@ def clear_port(port):
         print(f'Failed to stop {len(pids)} PID(s)')
         return False
 
-def wait_for(driver, selector, delay=20):
+def wait_for(driver, selector, delay=240):
     try:
         return WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
     except TimeoutException:
         return None
 
+def kill(driver):
+    global active_drivers
+    if driver:
+        driver.quit()
+    active_drivers -= 1
+
 def open_selenium(data):
+    global active_drivers
+
     driver = None
-    
+    active_drivers += 1
+
     try:
         chrome_options = Options()
 
@@ -70,10 +85,34 @@ def open_selenium(data):
 
         service = Service(executable_path='./chromedriver.exe')
         driver = webdriver.Chrome(service=service, options=chrome_options)
+
         driver.get('https://www.roblox.com/illegal-content-reporting')
 
-        wait_for(driver, '#cookie-banner-wrapper > div.cookie-banner > div:nth-child(2) > div > div > button.btn-cta-lg.cookie-btn.btn-primary-md.btn-min-width').click()
-        wait_for(driver, '#issue-type-selection > div > div:nth-child(1) > label').click()
+        print('opened')
+
+        clicks = []
+        clicks.append(wait_for(driver, '#cookie-banner-wrapper > div.cookie-banner > div:nth-child(2) > div > div > button.btn-cta-lg.cookie-btn.btn-primary-md.btn-min-width'))
+        clicks.append(wait_for(driver, '#issue-type-selection > div > div:nth-child(1) > label'))
+        clicks.append(wait_for(driver, '#confirmCheckbox'))
+
+        for element in clicks:
+            tries = 0
+            while True:
+                if tries > 10:
+                    print('Failed to click after 10 tries, quitting webdriver and opening new instance')
+                    kill(driver)
+                    time.sleep(1)
+                    open_selenium(data)
+                    return
+                
+                try:
+                    element.click()
+                    break
+                except: 
+                    tries += 1
+                    pass
+                time.sleep(1)
+
 
         url = ""
         match data["report_type"]:
@@ -83,6 +122,7 @@ def open_selenium(data):
                 url = data["url"]
             case 'group':
                 url = data["url"]
+
         wait_for(driver, '#url-input > input').send_keys(url)
 
         # Remove emojis from template
@@ -99,38 +139,33 @@ def open_selenium(data):
         wait_for(driver, '#reporter-info-name > input').send_keys(data["sender"])
         wait_for(driver, '#reporter-info-email > input').send_keys(data["email"])
 
-        wait_for(driver, '#confirmCheckbox').click()
 
         element = wait_for(driver, '#dsa-illegal-content-report-container > div > div.modal-overlay > div > div > div.modal-head-left > h2', delay=240)
 
         if element:
             driver.execute_script("arguments[0].innerHTML = 'Closing webdriver in a few seconds...'; arguments[0].style = 'color: red;'", element)
             time.sleep(2)
-            driver.quit()
-        else:
-            driver.quit()
+
+        kill(driver)
 
         return { "error": False }
     except Exception as e:
         print(str(e))
+        kill(driver)
+        print('Killed driver because an error occured')
 
         if 'This version of ChromeDriver only supports' in str(e):
-            if driver: driver.quit()
             return { "error": True, "type": "outdated-driver"}
         
         if 'target window already closed' in str(e):
-            if driver: driver.quit()
             return { "error": True, "type": "closed"}
         
         if 'need to be in PATH' in str(e):
-            if driver: driver.quit()
             return { "error": True, "type": "closed"}
 
         if ':ERR_TUNNEL_CONNECTION_FAILED' in str(e):
-            if driver: driver.quit()
             return { "error": True, "type": "network"}
 
-        if driver: driver.quit()
         return { "error": True, "type": "unknown"}
     
 app = Flask(__name__)
@@ -143,6 +178,10 @@ def main():
     if request.method == 'POST':
         data = json.loads(request.data.decode('utf8'))
         if "send_report" in data:
+            driver_limit = get_driver_limit()
+            if active_drivers >= driver_limit:                
+                return { "error": True, "type": "driver-limit", "limit": driver_limit}
+
             return open_selenium(data)
         return { "error": True, "type": "unknown" }
 

@@ -217,6 +217,7 @@ dsaButton.addEventListener('click', () => {
 							'no-driver': "Can't find driver, please install from the official site",
 							'network': 'Connection failed. Try changing VPN/Proxy',
 							'driver-open': 'Failed to open driver, a current one is open',
+							'driver-limit': `Reached driver limit of ${Object.keys(json).includes('limit') ? json.limit : '???'} driver(s)`,
 							'unknown': 'An unknown error has occured',
 						};
 

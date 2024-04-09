@@ -43,6 +43,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		});
 	} else {
 		getUrl().then((url) => {
+			console.log('yo');
 			fetch(url, {
 				method: 'POST',
 				body: JSON.stringify(request),

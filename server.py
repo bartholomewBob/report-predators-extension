@@ -7,6 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.chrome.service import Service
 
 import json, time, re, subprocess, os, sys
 
@@ -47,14 +48,11 @@ def clear_port(port):
         print(f'Failed to stop {len(pids)} PID(s)')
         return False
 
-
-
 def wait_for(driver, selector, delay=20):
     try:
         return WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
     except TimeoutException:
         return None
-
 
 def open_selenium(data):
     driver = None
@@ -70,7 +68,8 @@ def open_selenium(data):
         chrome_options.add_experimental_option("detach", True)
         chrome_options.add_argument('--start-maximized')
 
-        driver = webdriver.Chrome(executable_path="./chromedriver.exe", options=chrome_options)
+        service = Service(executable_path='./chromedriver.exe')
+        driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.get('https://www.roblox.com/illegal-content-reporting')
 
         wait_for(driver, '#cookie-banner-wrapper > div.cookie-banner > div:nth-child(2) > div > div > button.btn-cta-lg.cookie-btn.btn-primary-md.btn-min-width').click()
@@ -152,7 +151,6 @@ with open('port.txt', 'r') as file:
 
     # Clear all process using this port
     result = clear_port(port)
-
 
     # Run app if success
     if result:

@@ -253,6 +253,7 @@ dsaButton.addEventListener('click', () => {
 							'network': 'Connection failed. Try changing VPN/Proxy',
 							'driver-open': 'Failed to open driver, a current one is open',
 							'driver-limit': `Reached driver limit of ${Object.keys(json).includes('limit') ? json.limit : '???'} driver(s)`,
+							'bad-proxy': 'Proxy error. Please retry after changing proxy',
 							'unknown': 'An unknown error has occured',
 						};
 

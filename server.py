@@ -154,6 +154,9 @@ def open_selenium(data):
         kill(driver)
         print('Killed driver because an error occured')
 
+        if 'ERR_PROXY_CONNECTION_FAILED' in str(e):
+            return { "error": True, "type": "bad-proxy"}
+
         if 'This version of ChromeDriver only supports' in str(e):
             return { "error": True, "type": "outdated-driver"}
         

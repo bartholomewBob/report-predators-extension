@@ -80,6 +80,7 @@ def open_selenium(data):
             if content != '':
                 print(content)
                 chrome_options.add_argument(f'--proxy-server=http://{content}')
+                                
         chrome_options.add_experimental_option("detach", True)
         chrome_options.add_argument('--start-maximized')
 
@@ -129,16 +130,21 @@ def open_selenium(data):
         template = data["template"]
         template = re.sub(r'[^\x00-\x7F]+',' ', template)
 
+        print(template)
         wait_for(driver, "#illegal-description-input > textarea").send_keys(template)
 
         countries = driver.find_elements(By.CSS_SELECTOR, '.rbx-select > option')
+            
+        country_names = [element.text for element in countries]
+        if data["country"] not in country_names:
+            kill(driver)
+            return { "error": True, "type": "mismatched-countries", "countries": country_names }
 
         option = list(filter(lambda element: data["country"] in element.text, countries))[0]
         option.click()
 
         wait_for(driver, '#reporter-info-name > input').send_keys(data["sender"])
         wait_for(driver, '#reporter-info-email > input').send_keys(data["email"])
-
 
         element = wait_for(driver, '#dsa-illegal-content-report-container > div > div.modal-overlay > div > div > div.modal-head-left > h2', delay=240)
 

@@ -191,6 +191,13 @@ const pingServer = (data) => {
 	});
 };
 
+const setCountries = (countries) => {
+	chrome.storage.local.set({
+		'country': '',
+		'countries': countries,
+	});
+};
+
 let dsaButton = document.querySelector('#pred-main > .reports > #dsa');
 let standardButton = document.querySelector('#pred-main > .reports > #standard');
 dsaButton.addEventListener('click', () => {
@@ -254,8 +261,13 @@ dsaButton.addEventListener('click', () => {
 							'driver-open': 'Failed to open driver, a current one is open',
 							'driver-limit': `Reached driver limit of ${Object.keys(json).includes('limit') ? json.limit : '???'} driver(s)`,
 							'bad-proxy': 'Proxy error. Please retry after changing proxy',
+							'mismatched-countries': 'Country not found in dropdown menu, updating country list. Please change country and try again',
 							'unknown': 'An unknown error has occured',
 						};
+
+						if (json.type == 'mismatched-countries') {
+							setCountries(json.countries);
+						}
 
 						showError(errors[json.type], dsaButton, 'DSA Report', 3);
 					} else {

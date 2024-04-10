@@ -15,15 +15,18 @@ const getUrl = async () => {
 };
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+	if (request.template) {
+		fetch(`./templates/${request.file}`)
+			.then(async (response) => {
+				let template = await response.text();
+				sendResponse(template);
+			})
+			.catch(console.error);
+	}
+
 	if (request.ping) {
 		getUrl().then((url) => {
 			console.log(url);
-
-			console.log(
-				fetch(url, {
-					method: 'GET',
-				})
-			);
 
 			fetch(url, {
 				method: 'GET',

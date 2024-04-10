@@ -27,27 +27,22 @@
         {
             "matches": ["https://www.roblox.com/users/*/profile*"],
             "css": ["content.css"],
-            "js": ["content-profile.js"]
+            "js": ["utility.js", "content-profile.js"]
         },
         {
             "matches": ["https://www.roblox.com/abusereport/userprofile?id=*"],
             "css": ["content.css"],
-            "js": ["content-standard.js"]
+            "js": ["utility.js", "content-standard.js"]
         }, 
-        {
-            "matches": ["https://www.roblox.com/illegal-content-reporting/*"],
-            "css": ["content.css"],
-            "js": ["content-dsa.js"]
-        },
         {
             "matches": ["https://www.roblox.com/catalog/*"],
             "css": ["content.css"],
-            "js": ["content-catalog.js"]
+            "js": ["utility.js","content-catalog.js"]
         },
         {
             "matches": ["https://www.roblox.com/groups/*"],
             "css": ["content.css"],
-            "js": ["content-group.js"]
+            "js": ["utility.js", "content-group.js"]
         }
     ],
     "background": {

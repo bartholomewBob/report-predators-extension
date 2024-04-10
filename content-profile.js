@@ -1,84 +1,10 @@
-const template = (data) => {
-	let template = document.createElement('template');
-	template.innerHTML = data;
-	return template.content;
-};
-
-const getStoredFlags = () => {
-	return JSON.parse(localStorage.getItem('user-flags') || '{}');
-};
-
-const clean = (text) => {
-	text = text.replace(/\n+/g, '\n');
-	text = text.replace(/\s+/g, ' ');
-	return text;
-};
-
-const generateTemplate = (data, flags, sender) => {
-	let info = [];
-	let details = [];
-
-	if (flags.includes('user')) {
-		info.push('username');
-		details.push(`the username in question is "${clean(data.username)}"`);
-	}
-	if (flags.includes('display')) {
-		info.push('display name');
-		details.push(`the display name in question is "${clean(data.display)}"`);
-	}
-	if (flags.includes('bio')) {
-		info.push('bio');
-		details.push(`the bio in question is "${clean(data.bio)}"`);
-	}
-
-	if (flags.includes('avatar')) {
-		info.push('avatar');
-	}
-
-	if (info.length > 1) {
-		info[info.length - 1] = 'and ' + info[info.length - 1];
-	}
-
-	info = info.join(', ');
-
-	details = details.join(', ');
-	details = details.charAt(0).toUpperCase() + details.slice(1);
-	details += '. ';
-
-	let template = `I am writing to report an account with an inappropriate ${info} on your platform. ${details}The ${info} ${flags.length == 1 ? 'violates' : 'violate'} the community guidelines as ${
-		flags.length == 1 ? 'it' : 'they'
-	} ${flags.length == 1 ? 'contains' : 'contain'} offensive language/imagery not suitable for the platform.
-
-I kindly request that the necessary actions be taken to address this issue promptly. This may include reaching out to the accountholder to change the inappropriate content to something more appropriate, or suspending the account entirely if deemed necessary.
-
-Thank you for your attention to this matter. I believe by promptly addressing inappropriate content, we can contribute to a safer and respectful community.
-
-${sender ? 'Sincerely,\n' + sender : ''}`;
-
-	return template;
-};
-
-const formatUnix = (unix) => {
-	let date = new Date(unix);
-	let hours = date.getHours();
-	let period = hours >= 12 ? 'PM' : 'AM';
-	hours = hours > 12 ? hours - 12 : hours;
-	let minutes = date.getMinutes().toString().padStart(2, '0');
-
-	let year = date.getFullYear();
-	let month = date.getMonth() + 1;
-	let day = date.getDate();
-
-	return `${hours}:${minutes} ${period} ${year}/${month}/${day}`;
-};
-
 const checkLastReport = () => {
 	let previous = document.querySelector('#pred-main > #timestamp');
 	if (previous) {
 		previous.remove();
 	}
-	let reports = JSON.parse(localStorage.getItem('reports') || '[]');
 
+	let reports = JSON.parse(localStorage.getItem('reports') || '[]');
 	let user = reports.find((report) => report.user == user_id);
 	if (!user) return;
 
@@ -97,7 +23,7 @@ const checkLastReport = () => {
 const user_id = window.location.href.match(/\d+/g)[0];
 
 const getMainTemplate = () => {
-	let flags = getStoredFlags();
+	let flags = getStoredFlags('user-flags');
 	if (Object.keys(flags).includes(user_id)) {
 		flags = flags[user_id];
 	} else {
@@ -143,7 +69,7 @@ flag_elements.map((flag) => {
 
 		// Set local storage
 		let name = flag.getAttribute('data-name');
-		let flags = getStoredFlags();
+		let flags = getStoredFlags('user-flags');
 
 		// Add to storage if not exist
 		if (!Object.keys(flags).includes(user_id)) {
@@ -174,131 +100,60 @@ const report = (url) => {
 	window.open(url, '_blank');
 };
 
-const showError = (error, button, text, delay = 1) => {
-	button.innerHTML = error;
-	button.classList.add('error');
-	setTimeout(function () {
-		button.innerHTML = text;
-		button.classList.remove('error');
-	}, delay * 1000);
-};
-
-const pingServer = (data) => {
-	return new Promise((resolve, reject) => {
-		chrome.runtime.sendMessage(data, function (response) {
-			resolve(response);
-		});
-	});
-};
-
-const setCountries = (countries) => {
-	chrome.storage.local.set({
-		'country': '',
-		'countries': countries,
-	});
-};
-
 let dsaButton = document.querySelector('#pred-main > .reports > #dsa');
 let standardButton = document.querySelector('#pred-main > .reports > #standard');
-dsaButton.addEventListener('click', () => {
+dsaButton.addEventListener('click', async () => {
 	dsaButton.classList.remove('error');
 	dsaButton.innerHTML = 'Loading...';
 
-	chrome.storage.local.get(['email', 'sender', 'country'], (result) => {
-		if (
-			!Object.keys(result).includes('email') ||
-			!Object.keys(result).includes('sender') ||
-			!Object.keys(result).includes('country') ||
-			result.email.trim() == '' ||
-			result.sender.trim() == '' ||
-			result.country.trim() == ''
-		) {
-			showError('Please enter email/sender/country in popup', dsaButton, 'DSA Report');
-		} else {
-			let all_flags = JSON.parse(localStorage.getItem('user-flags'));
-			if (!Object.keys(all_flags).includes(user_id)) {
-				showError('Please choose one or more flag', dsaButton, 'DSA Report');
-				return;
-			}
+	let storage_result = await chrome.storage.local.get(['email', 'sender', 'country']);
+	console.log(storage_result);
+	if (!isStorageViable(storage_result)) return showError('Please enter email/sender/country in popup', dsaButton, 'DSA Report');
 
-			if (
-				document.querySelector(
-					'#right-navigation-header > div.navbar-right.rbx-navbar-right > ul > div.age-bracket-label.text-header > a > span.text-overflow.age-bracket-label-username.font-caption-header'
-				) == null
-			) {
-				showError('Please log in', dsaButton, 'DSA Report', 5);
-				return;
-			}
+	let all_flags = JSON.parse(localStorage.getItem('user-flags'));
 
-			let flags = all_flags[user_id];
-			let template = generateTemplate(getData(), flags, result.sender.trim());
+	if (!Object.keys(all_flags).includes(user_id)) return showError('Please choose one or more flag', dsaButton, 'DSA Report');
 
-			// Check if server is running
-			pingServer({ ping: true }).then((ping_result) => {
-				if (!ping_result) {
-					showError('Please turn on python flask server', dsaButton, 'DSA Report');
-					return;
-				}
+	if (
+		document.querySelector(
+			'#right-navigation-header > div.navbar-right.rbx-navbar-right > ul > div.age-bracket-label.text-header > a > span.text-overflow.age-bracket-label-username.font-caption-header'
+		) == null
+	)
+		return showError('Please log in', dsaButton, 'DSA Report', 5);
 
-				pingServer({
-					ping: false,
-					send_report: true,
-					report_type: 'profile',
-					id: user_id,
-					template: template,
-					sender: result.sender.trim(),
-					email: result.email.trim(),
-					country: result.country.trim(),
-				}).then((result) => {
-					let json = JSON.parse(result);
-					console.log(json);
-					if (json.error) {
-						let errors = {
-							'outdated-driver': 'Outdated chrome/chromedriver, please update chrome and your chromedriver',
-							'closed': 'Webdriver was closed',
-							'no-driver': "Can't find driver, please install from the official site",
-							'network': 'Connection failed. Try changing VPN/Proxy',
-							'driver-open': 'Failed to open driver, a current one is open',
-							'driver-limit': `Reached driver limit of ${Object.keys(json).includes('limit') ? json.limit : '???'} driver(s)`,
-							'bad-proxy': 'Proxy error. Please retry after changing proxy',
-							'mismatched-countries': 'Country not found in dropdown menu, updating country list. Please change country and try again',
-							'unknown': 'An unknown error has occured',
-						};
+	let flags = all_flags[user_id];
+	let template = await generateTemplate('template-profile.txt', flags, storage_result.sender.trim());
 
-						if (json.type == 'mismatched-countries') {
-							setCountries(json.countries);
-						}
+	// Check if server is running
+	let ping_result = await pingServer({ ping: true });
+	if (!ping_result) return showError('Please turn on python flask server', dsaButton, 'DSA Report');
 
-						showError(errors[json.type], dsaButton, 'DSA Report', 3);
-					} else {
-						let reports = JSON.parse(localStorage.getItem('reports') || '[]');
-
-						let index = reports.findIndex((report) => report.user == user_id);
-
-						if (index != -1) {
-							reports[index] = {
-								user: user_id,
-								reports: reports[index].reports + 1,
-								timestamp: Date.now(),
-							};
-						} else {
-							reports.append({
-								user: user_id,
-								reports: 1,
-								timestamp: Date.now(),
-							});
-						}
-
-						localStorage.setItem('reports', JSON.stringify(reports));
-
-						checkLastReport();
-
-						dsaButton.innerHTML = 'DSA Report';
-					}
-				});
-			});
-		}
+	let result = await pingServer({
+		ping: false,
+		send_report: true,
+		report_type: 'profile',
+		id: user_id,
+		template: template,
+		sender: storage_result.sender.trim(),
+		email: storage_result.email.trim(),
+		country: storage_result.country.trim(),
 	});
+
+	let json = JSON.parse(result);
+	console.log(json);
+	if (json.error) {
+		if (json.type == 'mismatched-countries') {
+			setCountries(json.countries);
+		}
+
+		showError(getServerError(json), dsaButton, 'DSA Report', 3);
+	} else {
+		saveUserReport(user_id);
+
+		checkLastReport();
+
+		dsaButton.innerHTML = 'DSA Report';
+	}
 });
 
 standardButton.addEventListener('click', () => {

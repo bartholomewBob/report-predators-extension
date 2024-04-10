@@ -1,0 +1,8 @@
+I am writing to report an inappropriate catalog item on your platform. This item violates the community guidelines as it contains offensive language/imagery not suitable for the platform.
+
+I kindly request that the necessary actions be taken to address this issue promptly. This may include reaching out to the creator of the item to change the inappropriate content to something more appropriate, or removing the item entirely if deemed necessary.
+
+Thank you for your attention to this matter. I believe by promptly addressing inappropriate content, we can contribute to a safer and respectful community.
+
+Sincerely,
+${sender}

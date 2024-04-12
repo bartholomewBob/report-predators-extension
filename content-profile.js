@@ -114,12 +114,7 @@ dsaButton.addEventListener('click', async () => {
 
 	if (!Object.keys(all_flags).includes(user_id)) return showError('Please choose one or more flag', dsaButton, 'DSA Report');
 
-	if (
-		document.querySelector(
-			'#right-navigation-header > div.navbar-right.rbx-navbar-right > ul > div.age-bracket-label.text-header > a > span.text-overflow.age-bracket-label-username.font-caption-header'
-		) == null
-	)
-		return showError('Please log in', dsaButton, 'DSA Report', 5);
+	if (Array.from(document.querySelectorAll('a')).filter((anchor) => anchor.href.includes('login')).length >= 1) return showError('Please log in', dsaButton, 'DSA Report', 5);
 
 	let flags = all_flags[user_id];
 	let template = await generateTemplate('template-profile.txt', flags, storage_result.sender.trim());

@@ -11,6 +11,7 @@ Use this chrome extension to report roblox profiles, autofill DSA and Standard r
 2. You can create an extension folder wherever you want, but it's preferable that you create it somewhere that won't change, as changing the extension folder location will reset all your extension storage which will clear all your report history and DSA information
 3. Locate the ZIP file that you just downloaded, it can be found in the Downloads folder or wherever you downloaded it, and then move it inside the extension folder that you just created
 4. Extract the ZIP file into that same directory by running "Extract Here" or "Extract All" and selecting the same directory
+5. You can delete the .ZIP file now
 
 ## Installing Python & PIP (if not installed)
 1. Install python from the official website https://www.python.org/downloads/

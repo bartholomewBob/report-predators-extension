@@ -6,12 +6,17 @@ Use this chrome extension to report roblox profiles, autofill DSA and Standard r
 
 ![](https://github.com/bartholomewBob/report-predators-extension/blob/main/showcase.gif)
 
-## Installing Python & PIP (if not installed)
+## Installing Extension Folder
+1. From the top of this github repository, click the "Code" button, and click "Download ZIP" at the bottom
+2. You can create an extension folder wherever you want, but it's preferable that you create it somewhere that won't change, as changing the extension folder location will reset all your extension storage which will clear all your report history and DSA information
+3. Locate the ZIP file that you just downloaded, it can be found in the Downloads folder or wherever you downloaded it, and then move it inside the extension folder that you just created
+4. Extract the ZIP file into that same directory by running "Extract Here" or "Extract All" and selecting the same directory
 
+## Installing Python & PIP (if not installed)
 1. Install python from the official website https://www.python.org/downloads/
 2. Download get-pip.py from an official source, here's one: https://bootstrap.pypa.io/get-pip.py
-3. Open a command prompt and navigate to where the get-pip.py file is
-4. Run the get-pip.py file
+3. Open a command prompt and navigate to where the get-pip.py file is using the `cd` command, for example if the get-pip.py file is in this directory `C:/Users/Bob/Downloads` you can do `cd C:/Users/Bob/Downloads` to navigate to that directory
+4. Run the get-pip.py file by running either of these commands in the same command prompt that has navigated to the file's directory.
 
 ```bash
 python get-pip.py
@@ -23,7 +28,7 @@ or
 python3 get-pip.py
 ```
 
-5. Check if pip is installed
+5. Check if pip is installed by running either of these commands
 
 ```bash
 pip --version
@@ -41,7 +46,9 @@ pip3 --version
 
 If you have a desktop or system-wide VPN that has available european countries, use it, otherwise you can use a proxy
 
-You can use a paid/premium proxy but there are free proxy lists available online that work too e.g: https://www.freeproxy.world/
+A proxy is like a VPN but has the ability to change the location of specific applications in your computer, like the chrome webdriver that is used in this extension for example
+
+You can use a paid/premium proxy but there are free proxy lists available online that work too e.g: https://www.freeproxy.world/ and much more can be found if you look up "Free proxy lists"
 
 If you want to use a proxy, use the format `<ip_address>:<port>`, and copy it into `proxy.txt`
 

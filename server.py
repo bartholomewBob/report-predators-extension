@@ -13,8 +13,10 @@ import json, time, re, subprocess, os, sys
 
 active_drivers = 0
 
+directory = os.path.dirname(os.path.abspath(__file__))
+
 def get_driver_limit():
-    with open('./limit.txt', 'r') as file:
+    with open(directory + '/limit.txt', 'r') as file:
         return int(file.read().strip())
 
 # Get all processes using a specific port by using netstat
@@ -75,7 +77,7 @@ def open_selenium(data):
     try:
         chrome_options = Options()
 
-        with open('./proxy.txt', 'r') as file:
+        with open(directory + '/proxy.txt', 'r') as file:
             content = file.read().strip()
             if content != '':
                 print(content)
@@ -116,13 +118,10 @@ def open_selenium(data):
 
 
         url = ""
-        match data["report_type"]:
-            case 'profile':
-                url = f'https://www.roblox.com/users/{data["id"]}/profile'
-            case 'catalog':
-                url = data["url"]
-            case 'group':
-                url = data["url"]
+        if data["report_type"] == "profile":
+            url = f'https://www.roblox.com/users/{data["id"]}/profile'
+        else:
+            url = data["url"]
 
         wait_for(driver, '#url-input > input').send_keys(url)
 
@@ -194,7 +193,7 @@ def main():
             return open_selenium(data)
         return { "error": True, "type": "unknown" }
 
-with open('port.txt', 'r') as file:
+with open(directory + '/port.txt', 'r') as file:
     port = int(file.read().strip()) or 8080
 
     # Clear all process using this port
@@ -213,7 +212,7 @@ with open('port.txt', 'r') as file:
 
         print(f'Changing port to {port}...')
 
-        with open('port.txt', 'w') as file:
+        with open(directory + '/port.txt', 'w') as file:
             file.write(str(port))
 
         # Restart the server
